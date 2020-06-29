@@ -6,12 +6,13 @@ import six
 import copy
 import logging
 import datetime
-from bson import DBRef, ObjectId
-from pymongo import MongoClient as Connection
-from .collection import DummyCollection
 from .options import _Options
+from bson import DBRef, ObjectId
+from bson.errors import InvalidId
+from .collection import DummyCollection
+from pymongo import MongoClient as Connection
 from marshmallow import Schema, fields, missing
-# import gridloc.fixed_datetime as datetime
+
 log = logging.getLogger('minimongo.model')
 
 """
@@ -176,8 +177,8 @@ class AttrDict(dict):
                         elif field.allow_none:
                             initial[field_name] = None
                         else:
-                            raise KeyError('Missing field: %s' % (field_name))
-                    print field_name, field.default
+                            if field.required:
+                                raise KeyError('Missing field: %s' % (field_name))
 
             for key, value in six.iteritems(initial):
                 # Can't just say self[k] = v here b/c of recursion.
@@ -262,7 +263,24 @@ class Model(AttrDict):
             result = self._meta.schema().load({key: value}, partial=True)
             if key in result.errors:
                 raise ValueError("%s=%s: %s" % (key, value, result.errors[key][0]))
+            field = self._meta.schema._declared_fields[key]
+            if field.__class__.__name__ == 'String':
+                value = unicode(value)
+            elif field.__class__.__name__ in ('Number', 'Integer'):
+                value = int(value)
+            elif field.__class__.__name__ == 'Decimal':
+                value = float(value)
+            elif field.__class__.__name__ == 'Boolean':
+                value = False if value in ('0', 0) else bool(value)
         super(Model, self).__setitem__(key, value)
+
+    def __delattr__(self, key):
+        if self._meta and hasattr(self._meta, 'schema') and key in self._meta.schema._declared_fields:
+            field = self._meta.schema._declared_fields[key]
+            if field.required:
+                raise KeyError('Unable to delete required field: %s' % (key))
+        super(Model, self).__delitem__(key)
+
 
     def dbref(self, with_database=True, **kwargs):
         """Returns a DBRef for the current object.

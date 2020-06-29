@@ -3,7 +3,7 @@ try:
 except ImportError:
     from distutils.core import find_packages, setup, Command
 
-requires = ["pymongo", "marshmallow"]
+requires = ["pymongo", "marshmallow", "future"]
 
 setup(name="entropy",
       version="0.1",
