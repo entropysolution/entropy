@@ -3,6 +3,7 @@ from __future__ import absolute_import
 
 import re
 import six
+import sys
 import copy
 import logging
 import datetime
@@ -12,6 +13,9 @@ from bson.errors import InvalidId
 from .collection import DummyCollection
 from pymongo import MongoClient as Connection
 from marshmallow import Schema, fields, missing
+
+if sys.version_info[0] >= 3:
+    unicode = str
 
 log = logging.getLogger('minimongo.model')
 

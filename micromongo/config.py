@@ -66,7 +66,7 @@ if __name__ != '__main__':
 
     try:
         settings_modules.append(os.environ['MINIMONGO_SETTINGS_MODULE'])
-    except KeyError, e:
+    except KeyError:
         pass
 
     # Here are the other 2 places that we try to import configs from:
@@ -81,6 +81,6 @@ if __name__ != '__main__':
             # Once we get a successfull config module import, we break out
             # of the loop above.
             break
-        except ImportError, exc:
+        except ImportError:
             # Error importing this modlue, so we continue
             pass
