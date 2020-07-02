@@ -12,7 +12,7 @@ from bson import DBRef, ObjectId
 from bson.errors import InvalidId
 from .collection import DummyCollection
 from pymongo import MongoClient as Connection
-from marshmallow import Schema, fields, missing
+from marshmallow import Schema, fields, missing, validate
 
 if sys.version_info[0] >= 3:
     unicode = str

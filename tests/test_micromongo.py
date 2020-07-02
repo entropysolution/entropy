@@ -1,9 +1,9 @@
 from unittest import TestCase
-from micromongo import Model, Index, fields
+from micromongo import Model, Index, fields, validate
 from bson.objectid import ObjectId
 
 class User(Model):
-    username = fields.Str(required=True)
+    username = fields.Str(required=True, validate=validate.Length(min=3))
     password = fields.Str(required=True)
     access_count = fields.Number(default=0)
     profile = fields.Dict(default={})
@@ -35,6 +35,8 @@ class TestModel(TestCase):
         self.assertTrue(u['active'] == True)
     
     def test_create_exception(self):
+        with self.assertRaises(ValueError):
+            u = User({"username": "u", "password": "pw", "profile_set_id": ObjectId(), "y": 2})
         with self.assertRaises(ValueError):
             User({"username": "user01", "password": True, "profile_set_id": ObjectId()})
         with self.assertRaises(KeyError):

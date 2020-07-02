@@ -8,9 +8,9 @@
 '''
 from .index import Index
 from .collection import Collection
-from .model import Model, AttrDict, fields
+from .model import Model, AttrDict, fields, validate
 from .options import configure
 
-__all__ = ('Collection', 'Index', 'Model', 'fields', 'configure', 'AttrDict')
+__all__ = ('Collection', 'Index', 'Model', 'fields', 'validate', 'configure', 'AttrDict')
 
 
