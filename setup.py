@@ -13,7 +13,7 @@ class PublishCommand(Command):
         self.spawn(['s3pypi', '--bucket', 'entropypi'])
 
 setup(name="entropy",
-      version="0.1",
+      version="1.0",
       packages=find_packages(),
       platforms=["any"],
       url='http://entropyph.com',

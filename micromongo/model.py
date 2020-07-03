@@ -102,8 +102,6 @@ class ModelBase(type):
         #if isinstance(options.host, list):
         #   options.host = options.host[0]
 
-        #print 'option', options
-
         #hostport = options.host, options.port
         hostport = options.host
         hostport_key = '_'.join(hostport)
@@ -173,7 +171,7 @@ class AttrDict(dict):
         # AttrDict.  Maybe this could be better done with the builtin
         # defaultdict?
         if initial:
-            if self._meta and hasattr(self._meta, 'schema'):
+            if hasattr(self, '_meta') and hasattr(self._meta, 'schema'):
                 for field_name, field in self._meta.schema._declared_fields.items():
                     if field_name not in initial:
                         if field.default != missing:
@@ -263,7 +261,7 @@ class Model(AttrDict):
         #                 raise Exception(
         #                     "Field mapper didn't change field type!")
         #             value = new_value
-        if self._meta and hasattr(self._meta, 'schema') and key in self._meta.schema._declared_fields:
+        if hasattr(self, '_meta') and hasattr(self._meta, 'schema') and key in self._meta.schema._declared_fields:
             result = self._meta.schema().load({key: value}, partial=True)
             if key in result.errors:
                 raise ValueError("%s=%s: %s" % (key, value, result.errors[key][0]))

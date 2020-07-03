@@ -1,6 +1,25 @@
+from copy import deepcopy
 from unittest import TestCase
-from micromongo import Model, Index, fields, validate
+from collections import Mapping
 from bson.objectid import ObjectId
+from micromongo import Model, Index, fields, validate
+
+def merge_recursion(d1, d2):
+	for k, v2 in d2.items():
+		v1 = d1.get(k)
+		if (isinstance(v1, Mapping) and isinstance(v2, Mapping)):
+			merge_recursion(v1, v2)
+		else:
+			d1[k] = v2
+
+def merge_dicts(base_dict, append_dict, overwrite=False):
+	if not overwrite:
+		copy_dict = deepcopy(base_dict)
+		merge_recursion(copy_dict, append_dict)
+		return copy_dict
+	if overwrite:
+		merge_recursion(base_dict, append_dict)
+		return base_dict
 
 class User(Model):
     username = fields.Str(required=True, validate=validate.Length(min=3))
@@ -22,6 +41,9 @@ class User(Model):
     @staticmethod
     def getUserFromUsername(username):
         return User.collection.find_one({'username': username})
+
+    def update(self, args):
+        merge_dicts(self, args, True)
 
 
 class TestModel(TestCase):
@@ -52,7 +74,7 @@ class TestModel(TestCase):
         with self.assertRaises(ValueError):
             User({"username": "user01", "password": "pw", "profile_set_id": ObjectId(), "parent_user_id": "11241241241"})
 
-    def test_update_exceptions(self):
+    def test_setattr_exceptions(self):
         u = User({"username": "user01", "password": "pw", "profile_set_id": ObjectId(), "parent_user_id": ObjectId()})
         with self.assertRaises(ValueError):
             u.username = 1
@@ -65,3 +87,10 @@ class TestModel(TestCase):
         u.parent_user_id = None # should be ok
         with self.assertRaises(KeyError):
             del(u.username)
+
+    def test_update_exceptions(self):
+        u = User({"username": "user01", "password": "pw", "profile_set_id": ObjectId(), "parent_user_id": ObjectId()})
+        with self.assertRaises(ValueError):
+            u.update({'username': 'X'})
+        with self.assertRaises(ValueError):
+            u.update({'username': 1})
