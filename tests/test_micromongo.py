@@ -25,11 +25,12 @@ class User(Model):
     username = fields.Str(required=True, validate=validate.Length(min=3))
     password = fields.Str(required=True)
     access_count = fields.Number(default=0)
+    gender = fields.Str(validate=validate.OneOf(choices=['M', 'F']))
     profile = fields.Dict(default={})
     active = fields.Boolean(default=True)
     parent_user_id = fields.ObjectId(default=None, allow_none=True)
     profile_set_id = fields.ObjectId(required=True)
-
+    
     class Meta:
         host = 'localhost'
         database = 'micromongo_test'
@@ -48,7 +49,7 @@ class User(Model):
 
 class TestModel(TestCase):
     def test_create(self):
-        u = User({"username": "user01", "password": "pw", "profile_set_id": ObjectId(), "y": 2})
+        u = User({"username": "user01", "password": "pw", "profile_set_id": ObjectId(), "y": 2, "gender": "M"})
         self.assertTrue(u['username'] == 'user01')
         self.assertTrue(u['password'] == 'pw')
         self.assertTrue(u['profile'] == {})
@@ -73,6 +74,8 @@ class TestModel(TestCase):
             User({"username": "user01", "password": "pw", "profile_set_id": ObjectId(), "access_count": "X"})
         with self.assertRaises(ValueError):
             User({"username": "user01", "password": "pw", "profile_set_id": ObjectId(), "parent_user_id": "11241241241"})
+        with self.assertRaises(ValueError):
+            User({"username": "user01", "password": "pw", "profile_set_id": ObjectId(), "gender": "X"})
 
     def test_setattr_exceptions(self):
         u = User({"username": "user01", "password": "pw", "profile_set_id": ObjectId(), "parent_user_id": ObjectId()})
@@ -94,3 +97,16 @@ class TestModel(TestCase):
             u.update({'username': 'X'})
         with self.assertRaises(ValueError):
             u.update({'username': 1})
+
+    def test_get_fields_schema_with_id(self):
+        s = User.getSchemaWithFields(['username', 'password'])._declared_fields
+        self.assertEqual(len(s), 3)
+        self.assertTrue('username' in s)
+        self.assertTrue('password' in s)
+        self.assertTrue('_id' in s)
+
+    def test_get_fields_schema_without_id(self):
+        s = User.getSchemaWithFields(['username', 'password'], with_id=False)._declared_fields
+        self.assertEqual(len(s), 2)
+        self.assertTrue('username' in s)
+        self.assertTrue('password' in s)

@@ -344,6 +344,15 @@ class Model(AttrDict):
     def id(self):
         return self._id
 
+    @classmethod
+    def getSchemaWithFields(cls, list_of_fields, with_id=True):
+        if hasattr(cls, '_meta') and hasattr(cls._meta, 'schema'):
+            schema_fields = {field: cls._meta.schema._declared_fields[field] for field in list_of_fields if field in cls._meta.schema._declared_fields}
+            if with_id:
+                schema_fields['_id'] = fields.ObjectId() 
+            return type('schema', (Schema,), schema_fields)
+        return None
+
 # Utils.
 
 def to_underscore(string):
