@@ -46,6 +46,25 @@ class ObjectIdField(fields.String):
         return self._validated(value)
 fields.ObjectId = ObjectIdField
 
+class AwareDateTimeObjectField(fields.String):
+    """datetime field."""
+
+    default_error_messages = {"invalid_datetime": "Not a valid datetime object.", "naive_datetime": "datetime is not timezone aware"}
+
+    def _validated(self, value):
+        """Format the value or raise a :exc:`ValidationError` if an error occurs."""
+        if value is None:
+            return None
+        if isinstance(value, datetime.datetime):
+            if value.tzinfo is None:
+                return self.fail('naive_datetime')
+            return value
+        self.fail('invalid_datetime')
+
+    def _deserialize(self, value, attr, data, **kwargs):
+        return self._validated(value)
+fields.AwareDateTimeObject = AwareDateTimeObjectField
+
 class ModelBase(type):
     """Metaclass for all models.
 
@@ -178,10 +197,6 @@ class AttrDict(dict):
                             initial[field_name] = field.default
                         elif field.allow_none:
                             initial[field_name] = None
-                        else:
-                            if field.required:
-                                raise KeyError('Missing field: %s' % (field_name))
-
             for key, value in six.iteritems(initial):
                 # Can't just say self[k] = v here b/c of recursion.
                 self.__setitem__(key, value)
@@ -262,9 +277,10 @@ class Model(AttrDict):
         #                     "Field mapper didn't change field type!")
         #             value = new_value
         if hasattr(self, '_meta') and hasattr(self._meta, 'schema') and key in self._meta.schema._declared_fields:
-            result = self._meta.schema().load({key: value}, partial=True)
-            if key in result.errors:
-                raise ValueError("%s=%s: %s" % (key, value, result.errors[key][0]))
+            if self._meta.strict:
+                result = self._meta.schema().load({key: value}, partial=True)
+                if key in result.errors:
+                    raise ValueError("%s=[%s] (%s): %s" % (key, value, type(value), result.errors[key][0]))
             field = self._meta.schema._declared_fields[key]
             if field.__class__.__name__ == 'String':
                 value = unicode(value)
@@ -282,7 +298,6 @@ class Model(AttrDict):
             if field.required:
                 raise KeyError('Unable to delete required field: %s' % (key))
         super(Model, self).__delitem__(key)
-
 
     def dbref(self, with_database=True, **kwargs):
         """Returns a DBRef for the current object.
@@ -313,19 +328,31 @@ class Model(AttrDict):
             del self_copy._id
             values = {'$set': self_copy}
         self.collection.update({'_id': self._id}, values, **kwargs)
-
         return self
 
     def save(self, *args, **kwargs):
         """Save this object to it's mongo collection."""
-        """try:
-            if request.active_merchant_id != self.merchant_id:
-                log.error('Save intercepted, merchant id mismatch (%s != %s) for %s', request.active_merchant_id, self.merchant_id, self)
-        except:
-            pass"""
+        if hasattr(self, '_meta') and hasattr(self._meta, 'schema'):
+            for field_name, field in self._meta.schema._declared_fields.items():
+                if field_name not in self and field.required:
+                    raise KeyError('Missing field: %s' % (field_name))
+            result = self._meta.schema().load(self)
+            for key, error in result.errors.items():
+                raise ValueError("%s=[%s] (%s): %s" % (key, self[key], type(self[key]), error[0]))
+            if self._meta.strict:
+                unsets = []
+                for key, value in self.items():
+                    if key not in self._meta.schema._declared_fields and key not in ['_id']:
+                        unsets.append(key)
+                for key_to_unset in unsets:
+                    del(self[key_to_unset])
         if self._meta.auto_modified_datetime:
             self['modified_datetime'] = datetime.datetime.utcnow()
-        self.collection.save(self, *args, **kwargs)
+        if '_id' not in self:
+            result = self.collection.insert_one(self)
+            self._id = result.inserted_id
+        else:
+            self.collection.replace_one({'_id': self._id}, self, upsert=True, *args, **kwargs)
         return self
 
     def load(self, fields=None, **kwargs):

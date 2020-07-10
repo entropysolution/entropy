@@ -62,6 +62,9 @@ class _Options(object):
     # Should indices be created at startup?    
     auto_index = True
 
+    # Ignore non declared keys when saving
+    strict = False
+
     # What is the base class for Collections.
     collection_class = Collection
 
