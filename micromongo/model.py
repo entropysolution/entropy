@@ -19,12 +19,65 @@ if sys.version_info[0] >= 3:
 
 log = logging.getLogger('minimongo.model')
 
-"""
-request = None
-try:
-    from flask import request
-except:
-    pass"""
+class ExtSchema(Schema):
+    _mapping = {}
+    @classmethod
+    def getmap(cls, field_name, target, schema_fields):
+        schema_field = schema_fields[field_name]
+        mapping = schema_field.metadata.get('mapping')
+        v = target
+        if mapping is None:
+            mapping = field_name
+        for el in mapping.split('.'):
+            if el[-2:] in ('{}', '[]'):
+                default = {} if el[-2:] == '{}' else []
+                v = v.get(el[:-2], default)
+            else:
+                v = v.get(el, schema_field.default if schema_field.default != missing else None)
+                if schema_field.__class__.__name__ != 'Nested':
+                    try:
+                        v = schema_field.deserialize(v)
+                    except:
+                        pass
+        if schema_field.__class__.__name__ == 'Nested':
+            if schema_field.many:
+                v = [schema_field.nested.getmaps(sv) for sv in v]
+            else:
+                v = schema_field.nested.getmaps(v)
+        return v
+
+    @classmethod
+    def getmaps(cls, target):
+        schema_fields = cls().fields
+        return {field: cls.getmap(field, target, schema_fields) for field, field_prop in schema_fields.items()}
+
+    @classmethod
+    def postmap(cls, input):
+        output = {}
+        schema_fields = cls().fields
+        input = cls().load(input)
+        if input.errors != {}:
+            abort(400, message=input.errors)
+        for field_name, field_value in input.data.items():
+            schema_field = schema_fields[field_name]
+            mapping = schema_field.metadata.get('mapping')
+            if mapping is None:
+                mapping = field_name
+            v = output
+            for el in mapping.split('.'):
+                if el[-2:] in ['{}', '[]']:
+                    default = {} if el[-2:] == '{}' else []
+                    v[el[:-2]] = v.get(el[:-2], default)
+                    v = v[el[:-2]]
+                else:
+                    if schema_field.__class__.__name__ == 'Nested':
+                        if schema_field.many:
+                            field_value = [schema_field.nested.postmap(sv) for sv in field_value]
+                        else:
+                            field_value = schema_field.nested.postmap(field_value)
+                    v[el] = field_value
+        return output 
+
 
 class ObjectIdField(fields.String):
     """ObjectId field."""
@@ -97,8 +150,7 @@ class ModelBase(type):
             if isinstance(attr, fields.Field):
                 schema_fields[kattr] = attr
                 delattr(new_class, kattr)
-        meta.schema = type('schema', (Schema,), schema_fields)
-
+        meta.schema = type('schema', (ExtSchema,), schema_fields)
         options = _Options(meta)
         options.collection = options.collection or to_underscore(name)
         if not hasattr(options, 'auto_modified_datetime'):
@@ -283,7 +335,7 @@ class Model(AttrDict):
                     raise ValueError("%s=[%s] (%s): %s" % (key, value, type(value), result.errors[key][0]))
             field = self._meta.schema._declared_fields[key]
             if field.__class__.__name__ == 'String':
-                value = unicode(value)
+                value = six.u(value)
             elif field.__class__.__name__ in ('Number', 'Integer'):
                 value = int(value)
             elif field.__class__.__name__ == 'Decimal':
@@ -372,12 +424,13 @@ class Model(AttrDict):
         return self._id
 
     @classmethod
-    def getSchemaWithFields(cls, list_of_fields, with_id=True):
+    def getSchemaWithFields(cls, list_of_fields, additional_fields={}, with_id=True):
         if hasattr(cls, '_meta') and hasattr(cls._meta, 'schema'):
             schema_fields = {field: cls._meta.schema._declared_fields[field] for field in list_of_fields if field in cls._meta.schema._declared_fields}
             if with_id:
-                schema_fields['_id'] = fields.ObjectId() 
-            return type('schema', (Schema,), schema_fields)
+                schema_fields['_id'] = fields.ObjectId()
+            schema_fields.update(additional_fields)
+            return type('schema', (ExtSchema,), schema_fields)
         return None
 
 # Utils.
