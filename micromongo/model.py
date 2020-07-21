@@ -13,6 +13,7 @@ from bson.errors import InvalidId
 from .collection import DummyCollection
 from pymongo import MongoClient as Connection
 from marshmallow import Schema, fields, missing, validate
+from pymongo.errors import DuplicateKeyError
 
 if sys.version_info[0] >= 3:
     unicode = str
@@ -117,6 +118,19 @@ class AwareDateTimeObjectField(fields.String):
     def _deserialize(self, value, attr, data, **kwargs):
         return self._validated(value)
 fields.AwareDateTimeObject = AwareDateTimeObjectField
+
+class CoordinatesField(fields.Field): # [Lat, Lng]
+    default_error_messages = {"invalid_type": "Invalid data type"}
+    def _deserialize(self, value, attr, data, **kwargs):
+        if isinstance(value, list) or isinstance(value, tuple) and len(value) == 2:
+            try:
+                return [round(float(value[0]), 7), round(float(value[0]), 7)]
+            except:
+                self.fail('invalid_type')
+        else:
+            self.fail('invalid_type')
+fields.Coordinates = CoordinatesField
+
 
 class ModelBase(type):
     """Metaclass for all models.
@@ -400,11 +414,14 @@ class Model(AttrDict):
                     del(self[key_to_unset])
         if self._meta.auto_modified_datetime:
             self['modified_datetime'] = datetime.datetime.utcnow()
-        if '_id' not in self:
-            result = self.collection.insert_one(self)
-            self._id = result.inserted_id
-        else:
-            self.collection.replace_one({'_id': self._id}, self, upsert=True, *args, **kwargs)
+        try:
+            if '_id' not in self:
+                result = self.collection.insert_one(self)
+                self._id = result.inserted_id
+            else:
+                self.collection.replace_one({'_id': self._id}, self, upsert=True, *args, **kwargs)
+        except DuplicateKeyError as ex:
+            raise ValueError(ex.details.get('errmsg'))
         return self
 
     def load(self, fields=None, **kwargs):
@@ -424,13 +441,13 @@ class Model(AttrDict):
         return self._id
 
     @classmethod
-    def getSchemaWithFields(cls, list_of_fields, additional_fields={}, with_id=True):
+    def getSchemaWithFields(cls, schema_id, list_of_fields, additional_fields={}, with_id=True):
         if hasattr(cls, '_meta') and hasattr(cls._meta, 'schema'):
             schema_fields = {field: cls._meta.schema._declared_fields[field] for field in list_of_fields if field in cls._meta.schema._declared_fields}
             if with_id:
                 schema_fields['_id'] = fields.ObjectId()
             schema_fields.update(additional_fields)
-            return type('schema', (ExtSchema,), schema_fields)
+            return type(schema_id, (ExtSchema,), schema_fields)
         return None
 
 # Utils.
