@@ -158,14 +158,14 @@ class TestModel(TestCase):
             u.update({'username': 1})
 
     def test_get_fields_schema_with_id(self):
-        s = StrictUser.getSchemaWithFields(['username', 'password'])._declared_fields
+        s = StrictUser.getSchemaWithFields('schema', ['username', 'password'])._declared_fields
         self.assertEqual(len(s), 3)
         self.assertTrue('username' in s)
         self.assertTrue('password' in s)
         self.assertTrue('_id' in s)
 
     def test_get_fields_schema_without_id(self):
-        s = StrictUser.getSchemaWithFields(['username', 'password'], with_id=False)._declared_fields
+        s = StrictUser.getSchemaWithFields('schema', ['username', 'password'], with_id=False)._declared_fields
         self.assertEqual(len(s), 2)
         self.assertTrue('username' in s)
         self.assertTrue('password' in s)

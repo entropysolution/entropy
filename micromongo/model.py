@@ -347,15 +347,15 @@ class Model(AttrDict):
                 result = self._meta.schema().load({key: value}, partial=True)
                 if key in result.errors:
                     raise ValueError("%s=[%s] (%s): %s" % (key, value, type(value), result.errors[key][0]))
-            field = self._meta.schema._declared_fields[key]
-            if field.__class__.__name__ == 'String':
-                value = six.u(value)
-            elif field.__class__.__name__ in ('Number', 'Integer'):
-                value = int(value)
-            elif field.__class__.__name__ == 'Decimal':
-                value = float(value)
-            elif field.__class__.__name__ == 'Boolean':
-                value = False if value in ('0', 0) else bool(value)
+                field = self._meta.schema._declared_fields[key]            
+                if field.__class__.__name__ == 'String':
+                    value = six.u(value)
+                elif field.__class__.__name__ in ('Number', 'Integer'):
+                    value = int(value)
+                elif field.__class__.__name__ == 'Decimal':
+                    value = float(value)
+                elif field.__class__.__name__ == 'Boolean':
+                    value = False if value in ('0', 0) else bool(value)
         super(Model, self).__setitem__(key, value)
 
     def __delattr__(self, key):
@@ -398,7 +398,7 @@ class Model(AttrDict):
 
     def save(self, *args, **kwargs):
         """Save this object to it's mongo collection."""
-        if hasattr(self, '_meta') and hasattr(self._meta, 'schema'):
+        if hasattr(self, '_meta') and hasattr(self._meta, 'schema') and self._meta.strict:
             for field_name, field in self._meta.schema._declared_fields.items():
                 if field_name not in self and field.required:
                     raise KeyError('Missing field: %s' % (field_name))
