@@ -11,18 +11,18 @@ class Cursor(PyMongoCursor):
         super(Cursor, self).__init__(*args, **kwargs)
 
     def next(self):
-        return self._wrapper_class(super(Cursor, self).next())
+        return self._wrapper_class(super(Cursor, self).next(), from_db=True)
 
     # XXX simple alias won't work here because of the super call.
 
     def __next__(self):
-        return self._wrapper_class(super(Cursor, self).__next__())
+        return self._wrapper_class(super(Cursor, self).__next__(), from_db=True)
 
     def __getitem__(self, index):
         if isinstance(index, slice):
             return super(Cursor, self).__getitem__(index)
         else:
-            return self._wrapper_class(super(Cursor, self).__getitem__(index))
+            return self._wrapper_class(super(Cursor, self).__getitem__(index), from_db=True)
 
 
 class Collection(PyMongoCollection):

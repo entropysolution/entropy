@@ -58,7 +58,7 @@ class ExtSchema(Schema):
         schema_fields = cls().fields
         input = cls().load(input)
         if input.errors != {}:
-            abort(400, message=input.errors)
+            raise ValueError('Parsing error: %s' % (input.errors))
         for field_name, field_value in input.data.items():
             schema_field = schema_fields[field_name]
             mapping = schema_field.metadata.get('mapping')
@@ -251,12 +251,13 @@ class ModelBase(type):
 
 
 class AttrDict(dict):
-    def __init__(self, initial=None, **kwargs):
+    def __init__(self, initial=None, from_db=False, **kwargs):
         # Make sure that during initialization, that we recursively apply
         # AttrDict.  Maybe this could be better done with the builtin
         # defaultdict?
         if initial:
-            if hasattr(self, '_meta') and hasattr(self._meta, 'schema'):
+            self._meta.initializing = from_db
+            if hasattr(self._meta, 'schema'):
                 for field_name, field in self._meta.schema._declared_fields.items():
                     if field_name not in initial:
                         if field.default != missing:
@@ -266,7 +267,7 @@ class AttrDict(dict):
             for key, value in six.iteritems(initial):
                 # Can't just say self[k] = v here b/c of recursion.
                 self.__setitem__(key, value)
-
+            self._meta.initializing = False
         # Process the other arguments (assume they are also default values).
         # This is the same behavior as the regular dict constructor.
         for key, value in six.iteritems(kwargs):
@@ -299,11 +300,12 @@ class AttrDict(dict):
             raise AttributeError(excn)
 
     def __setitem__(self, key, value):
+        # print("SET", key, value)
         # Coerce all nested dict-valued fields into AttrDicts
-        new_value = value
-        if isinstance(value, dict):
-            new_value = AttrDict(value)
-        return super(AttrDict, self).__setitem__(key, new_value)
+        # new_value = value
+        # if isinstance(value, dict):
+        #     new_value = AttrDict(value)
+        return super(AttrDict, self).__setitem__(key, value)
 
 
 @six.python_2_unicode_compatible
@@ -342,12 +344,13 @@ class Model(AttrDict):
         #                 raise Exception(
         #                     "Field mapper didn't change field type!")
         #             value = new_value
-        if hasattr(self, '_meta') and hasattr(self._meta, 'schema') and key in self._meta.schema._declared_fields:
+        if not self._meta.initializing and hasattr(self._meta, 'schema') and key in self._meta.schema._declared_fields:
             if self._meta.strict:
                 result = self._meta.schema().load({key: value}, partial=True)
                 if key in result.errors:
                     raise ValueError("%s=[%s] (%s): %s" % (key, value, type(value), result.errors[key][0]))
-                field = self._meta.schema._declared_fields[key]            
+            field = self._meta.schema._declared_fields[key]
+            try:
                 if field.__class__.__name__ == 'String':
                     value = six.u(value)
                 elif field.__class__.__name__ in ('Number', 'Integer'):
@@ -356,6 +359,8 @@ class Model(AttrDict):
                     value = float(value)
                 elif field.__class__.__name__ == 'Boolean':
                     value = False if value in ('0', 0) else bool(value)
+            except:
+                pass
         super(Model, self).__setitem__(key, value)
 
     def __delattr__(self, key):
@@ -398,14 +403,14 @@ class Model(AttrDict):
 
     def save(self, *args, **kwargs):
         """Save this object to it's mongo collection."""
-        if hasattr(self, '_meta') and hasattr(self._meta, 'schema') and self._meta.strict:
+        if hasattr(self._meta, 'schema'):
             for field_name, field in self._meta.schema._declared_fields.items():
                 if field_name not in self and field.required:
                     raise KeyError('Missing field: %s' % (field_name))
-            result = self._meta.schema().load(self)
-            for key, error in result.errors.items():
-                raise ValueError("%s=[%s] (%s): %s" % (key, self[key], type(self[key]), error[0]))
             if self._meta.strict:
+                result = self._meta.schema().load(self)
+                for key, error in result.errors.items():
+                    raise ValueError("%s=[%s] (%s): %s" % (key, self[key], type(self[key]), error[0]))
                 unsets = []
                 for key, value in self.items():
                     if key not in self._meta.schema._declared_fields and key not in ['_id']:
@@ -442,7 +447,7 @@ class Model(AttrDict):
 
     @classmethod
     def getSchemaWithFields(cls, schema_id, list_of_fields, additional_fields={}, with_id=True):
-        if hasattr(cls, '_meta') and hasattr(cls._meta, 'schema'):
+        if hasattr(cls._meta, 'schema'):
             schema_fields = {field: cls._meta.schema._declared_fields[field] for field in list_of_fields if field in cls._meta.schema._declared_fields}
             if with_id:
                 schema_fields['_id'] = fields.ObjectId()
