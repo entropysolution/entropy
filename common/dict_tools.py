@@ -1,9 +1,5 @@
-# from copy import deepcopy
-# import _pickle as pickle
 import ujson
 from collections import Mapping
-from common.jsonify import jsonify
-
 
 def deepcopy(d):
 	#return pickle.loads(pickle.dumps(d, -1))
@@ -15,8 +11,7 @@ def merge_dicts(base_dict, append_dict, overwrite=False):
     overwrite True will merge in-place
     """
 	if not isinstance(base_dict, dict) or not isinstance(append_dict, dict):
-		return jsonify({'success': False})
-
+		return None
 	if not overwrite:
 		copy_dict = deepcopy(base_dict)
 		merge_recursion(copy_dict, append_dict)
@@ -24,7 +19,6 @@ def merge_dicts(base_dict, append_dict, overwrite=False):
 	if overwrite:
 		merge_recursion(base_dict, append_dict)
 		return base_dict
-
 
 def merge_recursion(d1, d2):
 	"""Takes two dicts as arguments. Returns merged dicts by combining deeper levels recursively"""
