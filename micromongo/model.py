@@ -300,7 +300,7 @@ class AttrDict(dict):
             raise AttributeError(excn)
 
     def __setitem__(self, key, value):
-        # print("SET", key, value)
+        # print("AttrDict.SET", key, value)
         # Coerce all nested dict-valued fields into AttrDicts
         # new_value = value
         # if isinstance(value, dict):
@@ -359,6 +359,8 @@ class Model(AttrDict):
                     value = float(value)
                 elif field.__class__.__name__ == 'Boolean':
                     value = False if value in ('0', 0) else bool(value)
+                elif field.__class__.__name__ == 'ObjectIdField' and value is not None:
+                    value = ObjectId(value)
             except:
                 pass
         super(Model, self).__setitem__(key, value)

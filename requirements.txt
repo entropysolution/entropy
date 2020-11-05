@@ -1,0 +1,7 @@
+pymongo==3.6.1
+nexmo==2.4.0
+plivo==4.3.2
+smpplib==2.0.1
+pytz==2019.3
+ujson==1.35
+Werkzeug==0.14.1
