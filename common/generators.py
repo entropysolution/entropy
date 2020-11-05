@@ -1,8 +1,8 @@
-from random import choice
 from os import urandom
+from pbkdf2 import crypt
+from random import choice
 from hashlib import sha256
 from base64 import b64encode, b64decode
-from pbkdf2 import crypt
 
 
 def generate_alphanum(length):
