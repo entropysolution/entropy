@@ -4,28 +4,6 @@ ACL_VIEW = 2
 ACL_MODIFY = 3
 ACL_ADD_DELETE = 4
 
-def get_admin_acl():
-	output = {}
-	for key, val in auth_objects.items():
-		output[key] = 4 #- ACL_ADD_DELETE
-	return output
-
-def get_user_acl(user_privileges_dict):
-	output = {}
-	acl_obj = ACL(auth_objects, user_privileges_dict)
-	for key, val in auth_objects.items():
-		output[key] = acl_obj.allowedPrivilege(key)
-	return output
-
-def get_public_acl():
-	return {key: 2 if key in ['map'] else 1 for key, value in auth_objects.items()}
-
-def page_has_no_access(user_privileges, current_page):
-	if current_page in auth_objects:
-		return user_privileges[current_page] < 2  #ACL_VIEW = 2
-	else:
-		return True
-
 class ACL:
 	auth_objects = {}
 	objects = {}

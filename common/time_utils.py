@@ -25,3 +25,7 @@ def utcepoch():
 
 def utcnow():
     return datetime.now(timezone.utc)
+
+def tolocaltime(dt, tz_region=DEFAULT_TIMEZONE):
+    tz = ptimezone(tz_region)
+    return dt.astimezone(tz)

@@ -24,6 +24,9 @@ def jsonify(*args, **kwargs):
 def json_encode(*args, **kwargs):
 	return json.dumps(dict(*args, **kwargs), cls=MongoJsonEncoder)
 
+def json_decode(s):
+	return ujson.loads(s)
+
 def jsonify_with_headers(args, headers={}):
 	return Response(json.dumps(args, cls=MongoJsonEncoder), mimetype='application/json', headers=headers)
 

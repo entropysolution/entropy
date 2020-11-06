@@ -1,3 +1,5 @@
+from bson import ObjectId
+
 def isfloat(x):
    try:
        a = float(x)
@@ -15,3 +17,10 @@ def isint(x):
    else:
        return a == b
 
+def isobjectid(x):
+   try:
+       a = ObjectId(x)
+   except:
+       return False
+   else:
+       return True
