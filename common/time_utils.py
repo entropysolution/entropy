@@ -1,6 +1,7 @@
 from calendar import timegm
 from itertools import tee, zip_longest
 from datetime import datetime, timezone
+from pytz import timezone as ptimezone
 
 def pairwise(iterable):
     a, b = tee(iterable)
@@ -18,14 +19,15 @@ def group(sorted_iterable, delta):
                    break
             yield start, end
         else:
-            yield start, 
+            yield start,
 
 def utcepoch():
     return timegm(datetime.utcnow().utctimetuple())
 
 def utcnow():
+    # return datetime.utcnow().replace(tzinfo=timezone.utc)
     return datetime.now(timezone.utc)
 
-def tolocaltime(dt, tz_region=DEFAULT_TIMEZONE):
+def tolocaltime(dt, tz_region):
     tz = ptimezone(tz_region)
     return dt.astimezone(tz)
