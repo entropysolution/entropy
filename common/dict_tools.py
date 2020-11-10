@@ -1,9 +1,8 @@
-import ujson
+import _pickle as pickle
 from collections import Mapping
 
 def deepcopy(d):
-	#return pickle.loads(pickle.dumps(d, -1))
-	return ujson.loads(ujson.dumps(d))
+	return pickle.loads(pickle.dumps(d, -1))
 
 def merge_dicts(base_dict, append_dict, overwrite=False):
 	"""
