@@ -57,3 +57,7 @@ def convert_sec_to_str(seconds):
     if negative:
         out.append('ago')
     return ' '.join(out)
+
+def last_day_of_month(dt):
+    next_month = dt.replace(day=28, hour=23, minute=59, second=59) + timedelta(days=4)  # this will never fail
+    return next_month - timedelta(days=next_month.day)
