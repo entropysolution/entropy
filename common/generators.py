@@ -50,3 +50,7 @@ def generate_random_password():
 	 for k in range(0, 8):
 		  str.append(choice(chars))
 	 return ''.join(str)
+
+
+def genid():
+    return ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(9))
