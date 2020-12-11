@@ -15,16 +15,19 @@ from minio.error import ResponseError
 
 log = logging.getLogger('vortex.connections')
 
-GLOBAL_REDIS_HOST = environ.get('GLOBAL_REDIS_HOST')
-LOCAL_REDIS_HOST = environ.get('LOCAL_REDIS_HOST')
-S3_ACCESS_KEY_ID = environ.get('S3_ACCESS_KEY_ID')
-S3_SECRET_ACCESS_KEY = environ.get('S3_SECRET_ACCESS_KEY')
-S3_REGION = environ.get('S3_REGION')
-S3_HOSTNAME = environ.get('S3_HOSTNAME')
+# from pprint import pprint
+# pprint(environ)
+
+# GLOBAL_REDIS_HOST = environ.get('GLOBAL_REDIS_HOST')
+# LOCAL_REDIS_HOST = environ.get('LOCAL_REDIS_HOST')
+# S3_ACCESS_KEY_ID = environ.get('S3_ACCESS_KEY_ID')
+# S3_SECRET_ACCESS_KEY = environ.get('S3_SECRET_ACCESS_KEY')
+# S3_REGION = environ.get('S3_REGION')
+# S3_HOSTNAME = environ.get('S3_HOSTNAME')
 
 redis_pools = {}
-def getRedis(db=0, pool_id=0, local=False):
-    host = LOCAL_REDIS_HOST if local else GLOBAL_REDIS_HOST
+def getRedis(host, db=0, pool_id=0):
+    # host = LOCAL_REDIS_HOST if local else GLOBAL_REDIS_HOST
     pool_key = '%s:%s:%s' % (host, pool_id, db)
     if pool_key not in redis_pools:
         redis_pools[pool_key] = ConnectionPool(host=host, port=6379, db=db)
@@ -89,7 +92,7 @@ class Bucket:
         pass
 
 
-def getS3(bucket_name, retries=3, timeout=5):
+def getS3(bucket_name, retries=3, timeout=5, S3_HOSTNAME=None, S3_ACCESS_KEY_ID=None, S3_SECRET_ACCESS_KEY=None, S3_REGION=None):
     log.info('Connecting to S3 Server (%s)...', S3_HOSTNAME)
     client = None
     bucket = None
