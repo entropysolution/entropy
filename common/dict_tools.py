@@ -34,7 +34,6 @@ def merge_recursion(d1, d2):
 		else:
 			d1[k] = v2
 
-
 def merge_in_place(d1, d2):
     """
     Modifies d1 in-place to contain values from d2.  If any value
@@ -48,3 +47,7 @@ def merge_in_place(d1, d2):
             merge_in_place(v1, v2)
         else:
             d1[k] = v2
+
+class SafeDict(dict):
+    def __missing__(self, key):
+        return ''
