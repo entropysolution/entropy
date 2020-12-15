@@ -72,7 +72,7 @@ def convert_str_to_date(input_val, date_format='%m/%d/%Y %H:%M', tz=utc):
         return None
     return input_val
 
-def convert_date_to_str(input_val, date_format=DATETIME_FORMAT, tz=utc):
+def convert_date_to_str(input_val, date_format='%Y-%m-%d %H:%M:%S', tz=utc):
     try:
         input_val = input_val.astimezone(tz).strftime(date_format)
     except:
