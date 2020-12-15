@@ -1,6 +1,6 @@
 from calendar import timegm
 from itertools import tee, zip_longest
-from pytz import timezone as ptimezone
+from pytz import timezone as ptimezone, utc
 from datetime import datetime, timezone, timedelta
 
 def pairwise(iterable):
@@ -61,3 +61,27 @@ def convert_sec_to_str(seconds):
 def last_day_of_month(dt):
     next_month = dt.replace(day=28, hour=23, minute=59, second=59) + timedelta(days=4)  # this will never fail
     return next_month - timedelta(days=next_month.day)
+
+def convert_str_to_date(input_val, date_format='%m/%d/%Y %H:%M', tz=utc):
+    try:
+        input_val = datetime.strptime(input_val, date_format)
+        tz_offset = tz.utcoffset(input_val)
+        input_val = input_val - tz_offset
+        input_val = input_val.replace(tzinfo=utc)
+    except:
+        return None
+    return input_val
+
+def convert_date_to_str(input_val, date_format=DATETIME_FORMAT, tz=utc):
+    try:
+        input_val = input_val.astimezone(tz).strftime(date_format)
+    except:
+        return ''
+    return input_val
+
+def convert_str_to_date2(input_val):
+    try:
+        input_val = datetime.datetime.strptime(input_val, '%m/%d/%Y')
+    except:
+        return None
+    return input_val
