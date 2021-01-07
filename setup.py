@@ -11,7 +11,7 @@ class PublishCommand(Command):
         self.spawn(['s3pypi', '--bucket', 'entropypi'])
 
 setup(name="entropy",
-    version="1.0",
+    version="1.1",
     description='EntroPy common libraries',
     packages=find_packages(),
     platforms=["any"],
