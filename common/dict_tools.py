@@ -2,7 +2,6 @@
 # import _pickle as pickle
 import ujson
 from collections import Mapping
-from common.jsonify import jsonify
 
 _dispatcher = {}
 def _copy_list(l, dispatch):
@@ -34,29 +33,31 @@ def deepcopy(sth):
 # 	return ujson.loads(ujson.dumps(d))
 
 def merge_dicts(base_dict, append_dict, overwrite=False):
-	"""
+    """
     Recursively merges append_dict into base_dict
     overwrite True will merge in-place
     """
-	if not isinstance(base_dict, dict) or not isinstance(append_dict, dict):
-		return jsonify({'success': False})
-	if not overwrite:
-		copy_dict = deepcopy(base_dict)
-		merge_recursion(copy_dict, append_dict)
-		return copy_dict
-	if overwrite:
-		merge_recursion(base_dict, append_dict)
-		return base_dict
+    if not isinstance(base_dict, dict):
+        return append_dict
+    if not isinstance(append_dict, dict):
+        return base_dict
+    if not overwrite:
+        copy_dict = deepcopy(base_dict)
+        merge_recursion(copy_dict, append_dict)
+        return copy_dict
+    if overwrite:
+        merge_recursion(base_dict, append_dict)
+        return base_dict
 
 
 def merge_recursion(d1, d2):
-	"""Takes two dicts as arguments. Returns merged dicts by combining deeper levels recursively"""
-	for k, v2 in d2.items():
-		v1 = d1.get(k)
-		if (isinstance(v1, Mapping) and isinstance(v2, Mapping)):
-			merge_recursion(v1, v2)
-		else:
-			d1[k] = v2
+    """Takes two dicts as arguments. Returns merged dicts by combining deeper levels recursively"""
+    for k, v2 in d2.items():
+        v1 = d1.get(k)
+        if (isinstance(v1, Mapping) and isinstance(v2, Mapping)):
+            merge_recursion(v1, v2)
+        else:
+            d1[k] = v2
 
 def merge_in_place(d1, d2):
     """

@@ -272,8 +272,8 @@ class AttrDict(dict):
         # This is the same behavior as the regular dict constructor.
         for key, value in six.iteritems(kwargs):
             self.__setitem__(key, value)
-
         super(AttrDict, self).__init__()
+
 
     # These lines make this object behave both like a dict (x['y']) and like
     # an object (x.y).  We have to translate from KeyError to AttributeError
