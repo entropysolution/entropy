@@ -42,10 +42,10 @@ def generate_alphanum(length):
 # 	else:
 # 		return sha256('ent%sropy' % (input_string).hexdigest()) == test_string
 
-def generate_random_password():
+def generate_random_password(length=8):
 	 str = []
 	 chars = 'abcdefghijklmnopqrstuvwxyz1234567890'
-	 for k in range(0, 8):
+	 for k in range(0, length):
 		  str.append(choice(chars))
 	 return ''.join(str)
 

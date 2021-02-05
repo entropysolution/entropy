@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from pymongo.errors import OperationFailure
 
 class Index(object):
     """A simple wrapper for arguments to
@@ -22,4 +23,8 @@ class Index(object):
         """Calls :meth:`pymongo.collection.Collection.ensure_index`
         on the given `collection` with the stored arguments.
         """
-        return collection.create_index(*self._args, **self._kwargs)
+        try:
+            return collection.create_index(*self._args, **self._kwargs)
+        except OperationFailure:
+            collection.drop_indexes()
+            return False            

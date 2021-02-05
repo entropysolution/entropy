@@ -223,7 +223,9 @@ class ModelBase(type):
             new_class.collection.drop_indexes()
 
         if options.auto_index:
-            new_class.auto_index()   # Generating required indices.
+            for _ in range(3):
+                if new_class.auto_index():
+                    break
 
         new_class.auto_modified_datetime = options.auto_modified_datetime
 
@@ -243,11 +245,15 @@ class ModelBase(type):
                   method at import time, so import all your models up
                   front.
         """
+        returns = []
         for index in mcs._meta.indices:
             try:
-                index.ensure(mcs.collection)
+                returns.append(index.ensure(mcs.collection))
             except Exception as ex:
                 log.exception('Minimongo model auto-index exception: %s', ex)
+        return not any(returns)
+
+
 
 
 class AttrDict(dict):

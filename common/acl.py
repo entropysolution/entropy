@@ -38,7 +38,6 @@ class ACL:
 		self.objects = self.loadChildren(self.objects)
 
 	def loadChildren(self, objects):
-		#print 'LOADCHILDREN', objects
 		self.depth += 1
 		for obj_id in objects:
 			obj = objects[obj_id]
