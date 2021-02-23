@@ -30,6 +30,8 @@ class MongoSessionInterface(SessionInterface):
 
 		expireAfterSeconds = 3600
 		client = MongoClient(config['host'], 27017)
+        if config.get('authentication') and config.get('username') and config.get('password'):
+            client['admin'].authenticate(config.get('username'), config.get('password'))
 		self.store = client[config['database']][config['collection']]
 
 		if app is not None:
