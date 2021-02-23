@@ -207,7 +207,7 @@ class ModelBase(type):
                 }
             connection = Connection(hostport, tz_aware=True, **connection_args)
             mcs._connections[hostport_key] = connection
-            if options.authentication and options.username and options.password:
+            if options.username and options.password:
                 connection['admin'].authenticate(options.username, options.password)
 
         new_class._meta = options
