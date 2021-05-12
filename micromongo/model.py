@@ -202,8 +202,10 @@ class ModelBase(type):
             connection_args = {}
             if isinstance(options.host, list) and len(options.host) > 1:
                 connection_args = {
-                    'replicaset': 'vortex',
-                    'readPreference': 'secondaryPreferred'
+                    'replicaset': options.replicaset,
+                    'readPreference': options.readPreference,
+                    'w': options.w,
+                    'journal': options.journal
                 }
             connection = Connection(hostport, tz_aware=True, **connection_args)
             mcs._connections[hostport_key] = connection

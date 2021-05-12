@@ -80,6 +80,18 @@ class _Options(object):
     # properly in the subclasses.)
     interface = False
 
+    # Write concern: Request acknowledgment that the write operation has propagated to a specified number of mongod instances
+    w = 1
+
+    # Request acknowledgment that the write operation has been written to the on-disk journal
+    journal = 1
+
+    # The replica set read preference for this client
+    readPreference = 'secondaryPreferred'
+
+    # The replica set name
+    replicaset = 'default'
+
     def __init__(self, meta):
         if meta is not None:
             self.__dict__.update(meta.__dict__)
