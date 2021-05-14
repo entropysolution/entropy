@@ -82,17 +82,17 @@ def cast_form(request_object, **fields):
                 if field_value is None and field_type is not bool:
                     continue
                 if isinstance(request_object.form, ImmutableMultiDict):
-                    request.form = MultiDict(request_object.form)
+                    request_object.form = MultiDict(request_object.form)
                 try:
                     if field_type is bool:
-                        request.form[field_name] = False if field_value in (None, 0, '0', 'false') else True
+                        request_object.form[field_name] = False if field_value in (None, 0, '0', 'false') else True
                     elif field_type is str:
-                        request.form[field_name] = field_type(field_value).strip()
+                        request_object.form[field_name] = field_type(field_value).strip()
                     else:
-                        request.form[field_name] = field_type(field_value)
+                        request_object.form[field_name] = field_type(field_value)
                 except:
                     print('[CF] Invalid Value "{}" for field {} ({})'.format(field_value, field_name, field_type))
-                    request.form[field_name] = field_type()
+                    request_object.form[field_name] = field_type()
             return f(*args, **kwargs)
         return wrapped
     return wrapper
