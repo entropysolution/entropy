@@ -44,7 +44,7 @@ import pytz as _pytz
 import math as _math
 import re as _re
 from pytz import utc, UTC, HOUR, ZERO, timezone
-from flask import request
+# from flask import request
 
 _utc = _pytz.utc
 _default_tz = _utc
@@ -242,9 +242,9 @@ class datetime(_datetime):
 		If tzinfo is omitted, the default time zone will be used."""
 
 		if tzinfo == None:
-			try:
-				tzinfo = request.tz
-			except:
+			# try:
+			# 	tzinfo = request.tz
+			# except:
 			 	tzinfo = _default_tz
 
 		#dt = _datetime(year, month, day, hour, minute, second, microsecond)
@@ -318,9 +318,9 @@ class datetime(_datetime):
 		_tmp = datetime(*args)
 
 		if tz == None:
-			try:
-				tz = request.tz
-			except:
+			# try:
+			# 	tz = request.tz
+			# except:
 				tz = _default_tz
 
 		rv = _tmp.astimezone(tz)

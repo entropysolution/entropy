@@ -11,3 +11,4 @@ webassets==2.0
 marshmallow==2.21.0
 wachtwoord==0.14
 minio==5.0.7
+ipcalc==1.99.0
