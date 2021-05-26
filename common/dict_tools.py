@@ -1,7 +1,9 @@
 # from copy import deepcopy
 # import _pickle as pickle
 import ujson
+from deepdiff import DeepDiff
 from collections import Mapping
+
 
 _dispatcher = {}
 def _copy_list(l, dispatch):
@@ -76,3 +78,17 @@ def merge_in_place(d1, d2):
 class SafeDict(dict):
     def __missing__(self, key):
         return ''
+
+
+def diff_keys(a, b):
+	d = DeepDiff(a, b)
+	keys = []
+	for changes in d.values():
+		if not isinstance(changes, dict):
+			continue
+		for key in changes.keys():
+			key = key[6:]
+			key = key[:key.find("'")]
+			if key not in keys:
+				keys.append(key)
+	return keys
