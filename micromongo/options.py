@@ -84,7 +84,7 @@ class _Options(object):
     w = 1
 
     # Request acknowledgment that the write operation has been written to the on-disk journal
-    journal = 1
+    journal = True
 
     # The replica set read preference for this client
     readPreference = 'secondaryPreferred'
