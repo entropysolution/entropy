@@ -23,8 +23,8 @@ class Index(object):
         """Calls :meth:`pymongo.collection.Collection.ensure_index`
         on the given `collection` with the stored arguments.
         """
-        try:
-            return collection.create_index(*self._args, **self._kwargs)
-        except OperationFailure:
-            collection.drop_indexes()
-            return False            
+        #try:
+        return collection.create_index(*self._args, **self._kwargs)
+        #except OperationFailure:
+        #    collection.drop_indexes()
+        #    return False            
