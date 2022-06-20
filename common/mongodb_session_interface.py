@@ -37,7 +37,7 @@ class MongoSessionInterface(SessionInterface):
         if app is not None:
             expireAfterSeconds = app.permanent_session_lifetime.total_seconds()
 
-        self.store.drop_indexes()
+        #self.store.drop_indexes()
         self.store.ensure_index('sid')
         self.store.ensure_index('modified', expireAfterSeconds=expireAfterSeconds)
 
