@@ -463,7 +463,6 @@ class Model(AttrDict):
             if with_id:
                 schema_fields['_id'] = fields.ObjectId()
             schema_fields.update(additional_fields)
-            # log.info("RJ: %s", schema_fields)
             return type(schema_id, (ExtSchema,), schema_fields)
         return None
 
