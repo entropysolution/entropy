@@ -453,12 +453,17 @@ class Model(AttrDict):
         return self._id
 
     @classmethod
-    def getSchemaWithFields(cls, schema_id, list_of_fields, additional_fields={}, with_id=True):
+    def getSchemaWithFields(cls, schema_id, list_of_fields, additional_fields={}, with_id=True, disable_required=False):
+        def transformField(field, disable_required=False):
+            if disable_required:
+                field.required = False
+            return field
         if hasattr(cls._meta, 'schema'):
-            schema_fields = {field: cls._meta.schema._declared_fields[field] for field in list_of_fields if field in cls._meta.schema._declared_fields}
+            schema_fields = {field: transformField(cls._meta.schema._declared_fields[field], disable_required=disable_required) for field in list_of_fields if field in cls._meta.schema._declared_fields}
             if with_id:
                 schema_fields['_id'] = fields.ObjectId()
             schema_fields.update(additional_fields)
+            # log.info("RJ: %s", schema_fields)
             return type(schema_id, (ExtSchema,), schema_fields)
         return None
 
