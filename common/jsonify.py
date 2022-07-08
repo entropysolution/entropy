@@ -10,12 +10,15 @@ except ImportError:
 	except ImportError:
 		raise ImportError
 
+# RJ: Use bson.json_util ??
 class MongoJsonEncoder(json.JSONEncoder):
 	def default(self, obj):
 		if isinstance(obj, (datetime.datetime, datetime.date)):
 			return obj.isoformat()
-		elif isinstance(obj, ObjectId) or isinstance(obj, str) or isinstance(obj, type):
+		elif isinstance(obj, ObjectId) or isinstance(obj, str):
 			return str(obj)
+		elif isinstance(obj, type):
+			return obj.__name__
 		return json.JSONEncoder.default(self, obj)
 
 def jsonify(*args, **kwargs):
