@@ -31,7 +31,7 @@ oredis = ObjectRedis()
 object_caches = {}
 object_ages = {}
 object_invalidates = {}
-def ocached(mapping, group='default', size=256, age=30):
+def ocached(mapping, group='default', size=256, age=30, pointer=True):
     if group not in object_caches:
         object_caches[group] = ExpiringDict(max_len=size, max_age_seconds=age)
         object_ages[group] = age
@@ -54,7 +54,7 @@ def ocached(mapping, group='default', size=256, age=30):
                 object_cache[key] = fun(*args, **kwargs)
             # else:
             #     print("OC CACHE HIT", key)
-            return object_cache[key]
+            return object_cache[key] if pointer else deepcopy(object_cache[key])
         return wrapper
     return decorator
 
