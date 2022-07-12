@@ -2,6 +2,7 @@ import logging
 import bson.json_util
 from time import time
 from redis import Redis
+from copy import deepcopy
 from expiringdict import ExpiringDict
 
 log = logging.getLogger('entropy.caching')
