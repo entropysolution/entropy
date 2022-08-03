@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 ACL_INHERITED = 0
 ACL_NO_ACCESS = 1
 ACL_VIEW = 2
@@ -17,9 +19,9 @@ class ACL:
 		self.objects_2d = []
 		self.admin = admin
 		# print 'ACL init', user_privileges
-		self.auth_objects = auth_objects
-		for auth_object_id in auth_objects:
-			auth_object = auth_objects[auth_object_id]
+		self.auth_objects = deepcopy(auth_objects)
+		for auth_object_id in self.auth_objects:
+			auth_object = self.auth_objects[auth_object_id]
 			# print auth_object_id
 			# print auth_object
 
