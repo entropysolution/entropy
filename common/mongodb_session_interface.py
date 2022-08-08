@@ -1,9 +1,8 @@
-from datetime import datetime, timedelta
 from uuid import uuid4
-from flask.sessions import SessionInterface, SessionMixin
-from werkzeug.datastructures import CallbackDict
 from pymongo import MongoClient
-
+from datetime import datetime, timedelta
+from werkzeug.datastructures import CallbackDict
+from flask.sessions import SessionInterface, SessionMixin
 
 class MongoSession(CallbackDict, SessionMixin):
     def __init__(self, initial=None, sid=None, store=None):
@@ -60,7 +59,7 @@ class MongoSessionInterface(SessionInterface):
         if self.get_expiration_time(app, session):
             expiration = self.get_expiration_time(app, session)
         else:
-            expiration = datetime.utcnow() + timedelta(hours=1)
+            expiration = datetime.utcnow() + timedelta(seconds=app.permanent_session_lifetime.total_seconds())
         self.store.update({'sid': session.sid},
                           {'sid': session.sid,
                            'data': session,
