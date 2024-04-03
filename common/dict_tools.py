@@ -2,7 +2,10 @@
 # import _pickle as pickle
 import ujson
 from deepdiff import DeepDiff
-from collections import Mapping
+try:
+    from collections import Mapping
+except:
+    from collections.abc import Mapping
 
 _dispatcher = {}
 def _copy_list(l, dispatch):
