@@ -77,7 +77,7 @@ class ExtSchema(Schema):
                         else:
                             field_value = schema_field.nested.postmap(field_value)
                     v[el] = field_value
-        return output 
+        return output
 
 
 class ObjectIdField(fields.String):
@@ -169,6 +169,18 @@ class ModelBase(type):
         options.collection = options.collection or to_underscore(name)
         if not hasattr(options, 'auto_modified_datetime'):
             options.auto_modified_datetime = True
+        if not hasattr(options, 'ssl'):
+            options.ssl = False
+        if not hasattr(options, 'ssl_certfile'):
+            options.ssl_certfile = None
+        if not hasattr(options, 'ssl_pem_passphrase'):
+            options.ssl_pem_passphrase = None
+        if not hasattr(options, 'ssl_ca_certs'):
+            options.ssl_ca_certs = None
+        if not hasattr(options, 'ssl_crlfile'):
+            options.ssl_crlfile = None
+        if not hasattr(options, 'ssl_match_hostname'):
+            options.ssl_match_hostname = True
 
         if options.interface:
             new_class._meta = None
@@ -199,19 +211,27 @@ class ModelBase(type):
             # mongodb at this time but we want to create :class:`Model`.
             # False option doesn't work with pymongo 2.4 using master/slave
             # cluster
-            connection_args = {}
+            connection_args = {
+                'ssl': options.ssl,
+                'ssl_certfile': options.ssl_certfile,
+                'ssl_pem_passphrase': options.ssl_pem_passphrase,
+                'ssl_ca_certs': options.ssl_ca_certs,
+                'ssl_crlfile': options.ssl_crlfile,
+                'ssl_match_hostname': options.ssl_match_hostname
+            }
             if isinstance(options.host, list) and len(options.host) > 1:
-                connection_args = {
+                connection_args.update({
                     'replicaset': options.replicaset,
                     'readPreference': options.readPreference,
-                    'w': options.w,
-                    'journal': options.journal
-                }
+                    'w': options.w
+                })
+                if options.journal != None:
+                    connection_args['journal'] = options.journal
             connection = Connection(hostport, tz_aware=True, **connection_args)
             mcs._connections[hostport_key] = connection
             if options.username and options.password:
                 connection['admin'].authenticate(options.username, options.password)
-
+            log.info('[DB] %s connecting to %s:****@%s with args %s', name, options.username, hostport, connection_args)
         new_class._meta = options
         new_class.connection = connection
         new_class.database = connection[options.database]
