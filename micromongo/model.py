@@ -180,7 +180,7 @@ class ModelBase(type):
         if not hasattr(options, 'ssl_crlfile'):
             options.ssl_crlfile = None
         if not hasattr(options, 'ssl_match_hostname'):
-            options.ssl_match_hostname = None
+            options.ssl_match_hostname = False
 
         if options.interface:
             new_class._meta = None
