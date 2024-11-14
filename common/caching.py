@@ -32,6 +32,9 @@ class ObjectRedis:
     # single: obj_redis.setupUrl("redis://:mypassword@localhost:6379/0")
     # sentinel: obj_redis.setupUrl("sentinel://:mypassword@sentinel1:26379,sentinel2:26379,mymaster?db=0")
     def setupUrl(self, redis_url):
+        if not redis_url:
+            log.error('ObjectRedis.setupUrl: invalid url %s', redis_url)
+            return
         self.redis = Redis.from_url(redis_url)
 
 
