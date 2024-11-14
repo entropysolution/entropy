@@ -2,7 +2,7 @@ import logging
 import bson.json_util
 from time import time
 from redis import Redis
-from redis.sentinel import Sentinel
+# from redis.sentinel import Sentinel
 from copy import deepcopy
 from expiringdict import ExpiringDict
 
@@ -22,16 +22,18 @@ class DummyRedis:
 
 class ObjectRedis:
     redis = DummyRedis()
-    def setup(self, redis_host, redis_db, redis_password=None, master_name=None):
+    def setup(self, redis_host, redis_db, redis_password=None):
         self.redis_host = redis_host
         self.redis_db = redis_db
         self.redis_password = redis_password
         password = {'password': redis_password} if redis_password else {}
-        if isinstance(self.redis_host, list):
-            sentinel = Sentinel(self.redis_host, socket_timeout=0.1)
-            self.redis = sentinel.master_for(master_name, **dict({'db': redis_db}, **password))
-        else:
-            self.redis = Redis(**dict(**{'host': redis_host, 'db': redis_db}, **password))
+        self.redis = Redis(**dict(**{'host': redis_host, 'db': redis_db}, **password))
+
+    # single: obj_redis.setupUrl("redis://:mypassword@localhost:6379/0")
+    # sentinel: obj_redis.setupUrl("sentinel://:mypassword@sentinel1:26379,sentinel2:26379,mymaster?db=0")
+    def setupUrl(self, redis_url):
+        self.redis = Redis.from_url(redis_url)
+
 
 oredis = ObjectRedis()
 object_caches = {}
