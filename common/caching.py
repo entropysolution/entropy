@@ -45,7 +45,15 @@ class ObjectRedis:
             raise ValueError("Unsupported URL scheme. Use `redis://`, `rediss://`, or `sentinel://`.")
 
     def _setup_sentinel(self, parsed_url):
-        sentinel_hosts = [(host.split('@')[-1], int(port)) for host, port in zip(parsed_url.netloc.split(','), parsed_url.port.split(','))]
+        sentinel_hosts = []
+        for host in parsed_url.netloc.split(','):
+            if '@' in host:
+                # Handle the case with username/password (e.g., ':mypassword@sentinel1:26379')
+                userinfo, host_port = host.split('@')
+                host, port = host_port.split(':')
+            else:
+                host, port = host.split(':')
+            sentinel_hosts.append((host, int(port)))
         master_name = parsed_url.path.lstrip('/')
         query_params = dict(pair.split('=') for pair in parsed_url.query.split('&'))
         db = int(query_params.get('db', 0))
