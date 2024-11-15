@@ -1,9 +1,9 @@
 import logging
-import bson.json_util
 from time import time
 from redis import Redis
-# from redis.sentinel import Sentinel
 from copy import deepcopy
+from urllib.parse import urlparse
+from redis.sentinel import Sentinel
 from expiringdict import ExpiringDict
 
 log = logging.getLogger('entropy.caching')
@@ -31,11 +31,27 @@ class ObjectRedis:
 
     # single: obj_redis.setupUrl("redis://:mypassword@localhost:6379/0")
     # sentinel: obj_redis.setupUrl("sentinel://:mypassword@sentinel1:26379,sentinel2:26379,mymaster?db=0")
+    # sentinel://10.158.14.2:26379,10.158.14.3:26379,10.158.14.4:26379,mymaster?db=0
     def setupUrl(self, redis_url):
         if not redis_url:
             log.error('ObjectRedis.setupUrl: invalid url %s', redis_url)
             return
-        self.redis = Redis.from_url(redis_url)
+        parsed_url = urlparse(redis_url)
+        if parsed_url.scheme in ["redis", "rediss"]:
+            self.redis = Redis.from_url(redis_url)
+        elif parsed_url.scheme == "sentinel":
+            self._setup_sentinel(parsed_url)
+        else:
+            raise ValueError("Unsupported URL scheme. Use `redis://`, `rediss://`, or `sentinel://`.")
+
+    def _setup_sentinel(self, parsed_url):
+        sentinel_hosts = [(host.split('@')[-1], int(port)) for host, port in zip(parsed_url.netloc.split(','), parsed_url.port.split(','))]
+        master_name = parsed_url.path.lstrip('/')
+        query_params = dict(pair.split('=') for pair in parsed_url.query.split('&'))
+        db = int(query_params.get('db', 0))
+        password = query_params.get('password', None)
+        sentinel = Sentinel(sentinel_hosts, socket_timeout=0.1)
+        self.redis = sentinel.master_for(master_name, db=db, password=password)
 
 
 oredis = ObjectRedis()
